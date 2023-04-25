@@ -1,21 +1,11 @@
+from flask import Flask, jsonify
+
+import os
 import io
 import json
-import os
 from flask import Flask, render_template, request, url_for
-#from flask_shorturl import ShortUrl
-from flask_frozen import Freezer
-from flask_flatpages import FlatPages
 
 app = Flask(__name__)
-flatpage = FlatPages(app)
-freezer = Freezer(app)
-
-@freezer.register_generator
-def url_generator():
-    yield '/'
-    yield '/projects'
-    yield '/reading'
-    yield '/timeline'
 
 common = {
     'first_name': 'Joel',
@@ -26,10 +16,6 @@ common = {
 def index():
     return render_template('home.html', common=common)
 
-#@freezer.register_generator
-
-#@app.route('/projects.html') 
-#@app.route('/<path:path>/') 
 @app.route('/projects') 
 def projects():
     data = get_static_json("static/projects/projects.json")['projects']
@@ -58,9 +44,6 @@ def order_projects_by_weight(projects):
     except KeyError:
         return 0
 
-
-# new here 
-
 @app.route('/projects/<title>')
 def project(title):
     projects = get_static_json("static/projects/projects.json")['projects']
@@ -85,9 +68,9 @@ def project(title):
         selected['description'] = io.open(get_static_file(
             'static/%s/%s/%s.html' % (path, selected['link'], selected['link'])), "r", encoding="utf-8").read()
     return render_template('project.html', common=common, project=selected)
-
-#end here
-
+    
+    
+    
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html', common=common), 404
@@ -100,15 +83,8 @@ def get_static_file(path):
 
 def get_static_json(path):
     return json.load(open(get_static_file(path)))
+    
+    
 
-with app.test_request_context():
-    #print(url_for('/'))
-    print(url_for('projects'))
-    print(url_for('reading'))
-    print(url_for('timeline'))
-
-if __name__ == "__main__":
-    #freezer.freeze()
-    #freezer.run(debug=True)
-    #print("running py app")
-    app.run(host="127.0.0.1", port=5000, debug=True)
+if __name__ == '__main__':
+    app.run(debug=True, port=os.getenv("PORT", default=5000))
